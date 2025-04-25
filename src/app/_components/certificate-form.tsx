@@ -2,11 +2,13 @@
 
 import { Button, LabelButton } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useContext } from "react";
+import { toPng } from "html-to-image";
+import { useCallback, useContext } from "react";
 import { CertificateContext } from "./certificate";
 
 export function CertificateForm() {
   const {
+    certificateRef,
     recipientNameRef,
     dateRef,
     descriptionRef,
@@ -45,8 +47,34 @@ export function CertificateForm() {
     (signatureRef.current!.href.baseVal =
       "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=");
 
+  const onSubmit = useCallback(
+    (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      if (!certificateRef.current) {
+        console.error("Certificate ref is not set");
+        return;
+      }
+
+      toPng(certificateRef.current, {
+        cacheBust: true,
+        canvasWidth: 3840,
+        canvasHeight: 2880,
+      })
+        .then((dataUrl) => {
+          const link = document.createElement("a");
+          link.download = "certificate.png";
+          link.href = dataUrl;
+          link.click();
+        })
+        .catch((error) => {
+          console.error("Error generating image:", error);
+        });
+    },
+    [certificateRef],
+  );
+
   return (
-    <div className="flex w-full flex-col gap-y-4">
+    <form onSubmit={onSubmit} className="flex w-full flex-col gap-y-4">
       <div className="grid grid-cols-2 gap-x-4">
         <Input
           onChange={onRecipientNameChange}
@@ -74,6 +102,7 @@ export function CertificateForm() {
           <LabelButton htmlFor="background-file">Upload Background</LabelButton>
           <Button
             className="border-red-500 hover:border-red-500 hover:bg-red-500 hover:text-white"
+            type="button"
             onClick={onBackgroundFileClear}
           >
             Clear Background
@@ -90,6 +119,7 @@ export function CertificateForm() {
           <LabelButton htmlFor="signature-file">Upload Signature</LabelButton>
           <Button
             className="border-red-500 hover:border-red-500 hover:bg-red-500 hover:text-white"
+            type="button"
             onClick={onSignatureFileClear}
           >
             Clear Signature
@@ -97,10 +127,13 @@ export function CertificateForm() {
         </div>
       </div>
       <div className="grid grid-cols-1 gap-x-2">
-        <Button className="border-green-500 hover:border-green-500 hover:bg-green-500 hover:text-white">
+        <Button
+          className="border-green-500 hover:border-green-500 hover:bg-green-500 hover:text-white"
+          type="submit"
+        >
           Download
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
