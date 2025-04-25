@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useRef } from "react";
+import { createContext, useContext, useRef } from "react";
 
 type CertificateContextType = {
   recipientNameRef: React.RefObject<SVGTextElement | null>;
@@ -10,7 +10,13 @@ type CertificateContextType = {
   signatureRef: React.RefObject<SVGImageElement | null>;
 };
 
-const CertificateContext = createContext<CertificateContextType | null>(null);
+export const CertificateContext = createContext<CertificateContextType>({
+  recipientNameRef: { current: null },
+  dateRef: { current: null },
+  descriptionRef: { current: null },
+  backgroundImageRef: { current: null },
+  signatureRef: { current: null },
+});
 
 export function CertificateProvider({
   children,
@@ -39,11 +45,13 @@ export function CertificateProvider({
 }
 
 export function Certificate() {
-  const recipientNameRef = useRef<SVGTextElement | null>(null);
-  const dateRef = useRef<SVGTextElement | null>(null);
-  const descriptionRef = useRef<SVGTextElement | null>(null);
-  const backgroundImageRef = useRef<SVGImageElement | null>(null);
-  const signatureRef = useRef<SVGImageElement | null>(null);
+  const {
+    recipientNameRef,
+    dateRef,
+    descriptionRef,
+    backgroundImageRef,
+    signatureRef,
+  } = useContext(CertificateContext);
 
   return (
     <svg
@@ -111,14 +119,13 @@ export function Certificate() {
         x="400"
         y="360"
         textAnchor="middle"
-        fontSize="24"
+        fontSize="20"
         fill="#000"
       >
         [Description]
       </text>
 
       <image
-        ref={signatureRef}
         href="/medal.jpg"
         x="50%"
         y="430"
@@ -126,7 +133,16 @@ export function Certificate() {
         height="150"
         transform="translate(-75, 0)"
       />
+
       <rect x="60%" y="555" width="35%" height="3" fill="black" />
+      <image
+        href="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+        ref={signatureRef}
+        x="62.5%"
+        y="460"
+        width="30%"
+        height="90"
+      />
     </svg>
   );
 }
