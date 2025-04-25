@@ -66,7 +66,7 @@ export function Certificate() {
   } = useContext(CertificateContext);
 
   return (
-    <div className="w-full" ref={certificateRef}>
+    <section className="w-full" ref={certificateRef}>
       <svg
         viewBox="0 0 800 600"
         xmlns="http://www.w3.org/2000/svg"
@@ -163,6 +163,6 @@ export function Certificate() {
           height="90"
         />
       </svg>
-    </div>
+    </section>
   );
 }

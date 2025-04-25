@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 import type { Metadata } from "next";
 import { Open_Sans } from "next/font/google";
+import { Toaster } from "react-hot-toast";
 import { CertificateProvider } from "./_components/certificate";
 import "./globals.css";
 
@@ -28,6 +29,9 @@ export default function RootLayout({
           openSans.className,
         )}
       >
+        <aside>
+          <Toaster position="bottom-right" />
+        </aside>
         <CertificateProvider>{children}</CertificateProvider>
       </body>
     </html>

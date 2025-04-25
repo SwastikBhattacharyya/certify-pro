@@ -4,6 +4,7 @@ import { Button, LabelButton } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toPng } from "html-to-image";
 import { useContext, useState } from "react";
+import toast from "react-hot-toast";
 import { CsvRecord } from "../types";
 import { CertificateContext } from "./certificate";
 
@@ -73,27 +74,43 @@ export function CertificateForm() {
       headers.forEach((header, index) => {
         headers[index] = header.trim().toLowerCase();
       });
-      const headerIndices = {
-        name: headers.indexOf("name"),
-        description: headers.indexOf("description"),
-        date: headers.indexOf("date"),
-      };
-
-      const json: CsvRecord[] = rows.slice(1).map((row) => {
-        const values = row.split(",");
-
-        return {
-          name: values[headerIndices["name"]]
-            .trim()
-            .replace(/^["']|["']$/g, ""),
-          description: values[headerIndices["description"]]
-            .trim()
-            .replace(/^["']|["']$/g, ""),
-          date: values[headerIndices["date"]]
-            .trim()
-            .replace(/^["']|["']$/g, ""),
+      let headerIndices: { [key: string]: number };
+      try {
+        headerIndices = {
+          name: headers.indexOf("name"),
+          description: headers.indexOf("description"),
+          date: headers.indexOf("date"),
         };
-      });
+      } catch {
+        toast.error(
+          "Invalid CSV format. Please ensure the CSV has 'name', 'description', and 'date' headers.",
+        );
+        return;
+      }
+
+      let json: CsvRecord[];
+      try {
+        json = rows.slice(1).map((row) => {
+          const values = row.split(",");
+
+          return {
+            name: values[headerIndices["name"]]
+              .trim()
+              .replace(/^["']|["']$/g, ""),
+            description: values[headerIndices["description"]]
+              .trim()
+              .replace(/^["']|["']$/g, ""),
+            date: values[headerIndices["date"]]
+              .trim()
+              .replace(/^["']|["']$/g, ""),
+          };
+        });
+      } catch {
+        toast.error(
+          "Invalid CSV format. Please ensure the CSV has 'name', 'description', and 'date' headers with valid values.",
+        );
+        return;
+      }
       setCsvFile({ name: file.name, data: json });
     };
     reader.readAsText(file);
@@ -101,7 +118,7 @@ export function CertificateForm() {
 
   async function downloadCertificate() {
     if (!certificateRef.current) {
-      console.error("Certificate ref is not set");
+      toast.error("Unexpected error occurred. Please try again.");
       return;
     }
 
@@ -117,8 +134,8 @@ export function CertificateForm() {
         link.href = dataUrl;
         link.click();
       })
-      .catch((error) => {
-        console.error("Error generating image:", error);
+      .catch(() => {
+        toast.error("Failed to download certificate. Please try again.");
       });
   }
 
@@ -128,107 +145,120 @@ export function CertificateForm() {
   };
 
   const onBulkSubmit = async () => {
-    if (!csvFile.data) return;
+    if (!csvFile.data || csvFile.data.length === 0) {
+      toast.error("Please upload a valid CSV file first.");
+      return;
+    }
     for (const record of csvFile.data) {
       recipientNameRef.current!.textContent = record.name;
       dateRef.current!.textContent = record.date;
       descriptionRef.current!.textContent = record.description;
       await downloadCertificate();
     }
+    recipientNameRef.current!.textContent = "[Recipient Name]";
+    dateRef.current!.textContent = "[Date]";
+    descriptionRef.current!.textContent = "[Description]";
   };
 
   return (
-    <form onSubmit={onSubmit} className="flex w-full flex-col gap-y-4">
-      <div className="grid grid-cols-2 gap-x-4">
-        <Input
-          onChange={onRecipientNameChange}
-          placeholder="Recipient Name"
-          type="text"
-        />
-        <Input
-          className="w-full"
-          onChange={onDateChange}
-          placeholder="Date"
-          type="date"
-        />
-      </div>
-      <div className="grid grid-cols-1">
-        <textarea
-          className="resize-none rounded-lg border border-gray-400 px-4 py-2 text-sm text-white transition-colors duration-300 ease-in-out outline-none focus:border-white"
-          onChange={onDescriptionChange}
-          placeholder="Description"
-        />
-      </div>
-      <div className="grid grid-cols-2 gap-x-4">
-        <div className="grid grid-cols-2 gap-x-2">
-          <input
-            id="background-file"
-            className="hidden"
-            onChange={onBackgroundFileChange}
-            type="file"
-            accept="image/*"
+    <section className="w-full">
+      <form onSubmit={onSubmit} className="flex w-full flex-col gap-y-4">
+        <div className="grid grid-cols-2 gap-x-4">
+          <Input
+            onChange={onRecipientNameChange}
+            placeholder="Recipient Name"
+            type="text"
           />
-          <LabelButton
-            className="text-[0.6rem] sm:text-sm"
-            htmlFor="background-file"
-          >
-            Upload Background
-          </LabelButton>
+          <Input
+            className="w-full"
+            onChange={onDateChange}
+            placeholder="Date"
+            type="date"
+          />
+        </div>
+        <div className="grid grid-cols-1">
+          <textarea
+            className="resize-none rounded-lg border border-gray-400 px-4 py-2 text-sm text-white transition-colors duration-300 ease-in-out outline-none focus:border-white"
+            onChange={onDescriptionChange}
+            placeholder="Description"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-x-4">
+          <div className="grid grid-cols-2 gap-x-2">
+            <input
+              id="background-file"
+              className="hidden"
+              onChange={onBackgroundFileChange}
+              type="file"
+              accept="image/*"
+            />
+            <LabelButton
+              className="text-[0.6rem] sm:text-sm"
+              htmlFor="background-file"
+            >
+              Upload Background
+            </LabelButton>
+            <Button
+              className="border-red-500 text-[0.6rem] hover:border-red-500 hover:bg-red-500 hover:text-white sm:text-sm"
+              type="button"
+              onClick={onBackgroundFileClear}
+            >
+              Clear Background
+            </Button>
+          </div>
+          <div className="grid grid-cols-2 gap-x-2">
+            <input
+              id="signature-file"
+              className="hidden"
+              onChange={onSignatureFileChange}
+              type="file"
+              accept="image/*"
+            />
+            <LabelButton
+              className="text-[0.6rem] sm:text-sm"
+              htmlFor="signature-file"
+            >
+              Upload Signature
+            </LabelButton>
+            <Button
+              className="border-red-500 text-[0.6rem] hover:border-red-500 hover:bg-red-500 hover:text-white sm:text-sm"
+              type="button"
+              onClick={onSignatureFileClear}
+            >
+              Clear Signature
+            </Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-x-2">
           <Button
-            className="border-red-500 text-[0.6rem] hover:border-red-500 hover:bg-red-500 hover:text-white sm:text-sm"
-            type="button"
-            onClick={onBackgroundFileClear}
+            className="border-green-500 hover:border-green-500 hover:bg-green-500 hover:text-white"
+            type="submit"
           >
-            Clear Background
+            Download
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-x-2">
-          <input
-            id="signature-file"
-            className="hidden"
-            onChange={onSignatureFileChange}
-            type="file"
-            accept="image/*"
-          />
-          <LabelButton
-            className="text-[0.6rem] sm:text-sm"
-            htmlFor="signature-file"
-          >
-            Upload Signature
-          </LabelButton>
-          <Button
-            className="border-red-500 text-[0.6rem] hover:border-red-500 hover:bg-red-500 hover:text-white sm:text-sm"
-            type="button"
-            onClick={onSignatureFileClear}
-          >
-            Clear Signature
+          <div className="flex flex-col gap-y-1 text-white">
+            <input
+              id="csv-file"
+              className="hidden"
+              onChange={onCsvFileChange}
+              type="file"
+              accept=".csv"
+            />
+            <LabelButton htmlFor="csv-file">Upload CSV</LabelButton>
+            <p className="text-center text-xs">
+              {csvFile.name || "No File Uploaded"}
+            </p>
+            <p className="text-center text-xs">
+              Format: <b>name,description,date </b>
+            </p>
+          </div>
+          <Button type="button" onClick={onBulkSubmit}>
+            Generate Bulk Certificates
           </Button>
         </div>
-      </div>
-      <div className="grid grid-cols-1 gap-x-2">
-        <Button
-          className="border-green-500 hover:border-green-500 hover:bg-green-500 hover:text-white"
-          type="submit"
-        >
-          Download
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 gap-x-2">
-        <div className="flex flex-col gap-y-1 text-white">
-          <input
-            id="csv-file"
-            className="hidden"
-            onChange={onCsvFileChange}
-            type="file"
-            accept=".csv"
-          />
-          <LabelButton htmlFor="csv-file">Upload CSV</LabelButton>
-          <p className="text-center">{csvFile.name || "No File Uploaded"}</p>
-        </div>
-        <Button type="button" onClick={onBulkSubmit}>
-          Generate Bulk Certificates
-        </Button>
-      </div>
-    </form>
+      </form>
+    </section>
   );
 }

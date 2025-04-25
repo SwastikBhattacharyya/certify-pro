@@ -19,7 +19,6 @@ export function Sidebar() {
   ];
 
   const onImageClick = (image: string) => {
-    console.log("image", image);
     backgroundImageRef.current?.setAttribute("href", `/${image}`);
   };
 
