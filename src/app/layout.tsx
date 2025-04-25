@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={cn(
-          "h-screen w-screen overflow-hidden bg-linear-to-br from-zinc-600 to-zinc-800 antialiased",
+          "flex h-dvh w-screen items-center justify-center overflow-hidden bg-linear-to-br from-zinc-600 to-zinc-800 antialiased",
           openSans.className,
         )}
       >

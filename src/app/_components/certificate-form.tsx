@@ -26,8 +26,11 @@ export function CertificateForm() {
     (recipientNameRef.current!.textContent =
       e.target.value || "[Recipient Name]");
 
-  const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    (dateRef.current!.textContent = e.target.value || "[Date]");
+  const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    dateRef.current!.textContent = e.target.value || "[Date]";
+    if (e.target.value.length > 0) e.target.classList.add("full");
+    else e.target.classList.remove("full");
+  };
 
   const onDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
     (descriptionRef.current!.textContent = e.target.value || "[Description]");
@@ -142,7 +145,12 @@ export function CertificateForm() {
           placeholder="Recipient Name"
           type="text"
         />
-        <Input onChange={onDateChange} placeholder="Date" type="date" />
+        <Input
+          className="w-full"
+          onChange={onDateChange}
+          placeholder="Date"
+          type="date"
+        />
       </div>
       <div className="grid grid-cols-1">
         <textarea
@@ -160,9 +168,14 @@ export function CertificateForm() {
             type="file"
             accept="image/*"
           />
-          <LabelButton htmlFor="background-file">Upload Background</LabelButton>
+          <LabelButton
+            className="text-[0.6rem] sm:text-sm"
+            htmlFor="background-file"
+          >
+            Upload Background
+          </LabelButton>
           <Button
-            className="border-red-500 hover:border-red-500 hover:bg-red-500 hover:text-white"
+            className="border-red-500 text-[0.6rem] hover:border-red-500 hover:bg-red-500 hover:text-white sm:text-sm"
             type="button"
             onClick={onBackgroundFileClear}
           >
@@ -177,9 +190,14 @@ export function CertificateForm() {
             type="file"
             accept="image/*"
           />
-          <LabelButton htmlFor="signature-file">Upload Signature</LabelButton>
+          <LabelButton
+            className="text-[0.6rem] sm:text-sm"
+            htmlFor="signature-file"
+          >
+            Upload Signature
+          </LabelButton>
           <Button
-            className="border-red-500 hover:border-red-500 hover:bg-red-500 hover:text-white"
+            className="border-red-500 text-[0.6rem] hover:border-red-500 hover:bg-red-500 hover:text-white sm:text-sm"
             type="button"
             onClick={onSignatureFileClear}
           >

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useRef } from "react";
+import { createContext, useContext, useRef, useState } from "react";
 
 type CertificateContextType = {
   certificateRef: React.RefObject<HTMLDivElement | null>;
@@ -9,6 +9,8 @@ type CertificateContextType = {
   descriptionRef: React.RefObject<SVGTextElement | null>;
   backgroundImageRef: React.RefObject<SVGImageElement | null>;
   signatureRef: React.RefObject<SVGImageElement | null>;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export const CertificateContext = createContext<CertificateContextType>({
@@ -18,6 +20,8 @@ export const CertificateContext = createContext<CertificateContextType>({
   descriptionRef: { current: null },
   backgroundImageRef: { current: null },
   signatureRef: { current: null },
+  isSidebarOpen: false,
+  setIsSidebarOpen: () => {},
 });
 
 export function CertificateProvider({
@@ -31,6 +35,7 @@ export function CertificateProvider({
   const descriptionRef = useRef<SVGTextElement | null>(null);
   const backgroundImageRef = useRef<SVGImageElement | null>(null);
   const signatureRef = useRef<SVGImageElement | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <CertificateContext.Provider
@@ -41,6 +46,8 @@ export function CertificateProvider({
         descriptionRef,
         backgroundImageRef,
         signatureRef,
+        isSidebarOpen,
+        setIsSidebarOpen,
       }}
     >
       {children}
