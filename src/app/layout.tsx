@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CertificateProvider } from "./_components/certificate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="h-screen w-screen overflow-hidden bg-linear-to-br from-zinc-600 to-zinc-800 antialiased">
+        <CertificateProvider>{children}</CertificateProvider>
+      </body>
     </html>
   );
 }
