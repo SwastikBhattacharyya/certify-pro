@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+input[type="date"]:before {
+  color: lightgray;
+  content: attr(placeholder);
+}
+
+input[type="date"].full:before {
+  color: black;
+  content: "" !important;
+}

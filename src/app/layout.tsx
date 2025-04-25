@@ -1,4 +1,7 @@
+import { cn } from "@/lib/cn";
 import type { Metadata } from "next";
+import { Open_Sans } from "next/font/google";
+import { CertificateProvider } from "./_components/certificate";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -7,6 +10,11 @@ export const metadata: Metadata = {
     "CertifyPro is an easy-to-use certificate generator for creating individual or bulk certificates quickly and efficiently.",
 };
 
+const openSans = Open_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -14,7 +22,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body
+        className={cn(
+          "flex h-dvh w-screen items-center justify-center overflow-hidden bg-linear-to-br from-zinc-600 to-zinc-800 antialiased",
+          openSans.className,
+        )}
+      >
+        <CertificateProvider>{children}</CertificateProvider>
+      </body>
     </html>
   );
 }
