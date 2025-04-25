@@ -3,7 +3,8 @@
 import { Button, LabelButton } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toPng } from "html-to-image";
-import { useCallback, useContext } from "react";
+import { useContext, useState } from "react";
+import { CsvRecord } from "../types";
 import { CertificateContext } from "./certificate";
 
 export function CertificateForm() {
@@ -16,13 +17,21 @@ export function CertificateForm() {
     signatureRef,
   } = useContext(CertificateContext);
 
+  const [csvFile, setCsvFile] = useState({
+    name: "",
+    data: [] as CsvRecord[],
+  });
+
   const onRecipientNameChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     (recipientNameRef.current!.textContent =
       e.target.value || "[Recipient Name]");
+
   const onDateChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     (dateRef.current!.textContent = e.target.value || "[Date]");
+
   const onDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
     (descriptionRef.current!.textContent = e.target.value || "[Description]");
+
   const onBackgroundFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -32,8 +41,10 @@ export function CertificateForm() {
     };
     reader.readAsDataURL(file!);
   };
+
   const onBackgroundFileClear = () =>
     (backgroundImageRef.current!.href.baseVal = "/template-1.jpg");
+
   const onSignatureFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -43,35 +54,85 @@ export function CertificateForm() {
     };
     reader.readAsDataURL(file);
   };
+
   const onSignatureFileClear = () =>
     (signatureRef.current!.href.baseVal =
       "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=");
 
-  const onSubmit = useCallback(
-    (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      if (!certificateRef.current) {
-        console.error("Certificate ref is not set");
-        return;
-      }
+  const onCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const csv = event.target?.result as string;
+      const rows = csv.trim().split("\n");
+      const headers = rows[0].split(",");
+      headers.forEach((header, index) => {
+        headers[index] = header.trim().toLowerCase();
+      });
+      const headerIndices = {
+        name: headers.indexOf("name"),
+        description: headers.indexOf("description"),
+        date: headers.indexOf("date"),
+      };
 
-      toPng(certificateRef.current, {
-        cacheBust: true,
-        canvasWidth: 3840,
-        canvasHeight: 2880,
+      const json: CsvRecord[] = rows.slice(1).map((row) => {
+        const values = row.split(",");
+
+        return {
+          name: values[headerIndices["name"]]
+            .trim()
+            .replace(/^["']|["']$/g, ""),
+          description: values[headerIndices["description"]]
+            .trim()
+            .replace(/^["']|["']$/g, ""),
+          date: values[headerIndices["date"]]
+            .trim()
+            .replace(/^["']|["']$/g, ""),
+        };
+      });
+      setCsvFile({ name: file.name, data: json });
+    };
+    reader.readAsText(file);
+  };
+
+  async function downloadCertificate() {
+    if (!certificateRef.current) {
+      console.error("Certificate ref is not set");
+      return;
+    }
+
+    await toPng(certificateRef.current, {
+      cacheBust: true,
+      canvasWidth: 3840,
+      canvasHeight: 2880,
+      pixelRatio: 1,
+    })
+      .then((dataUrl) => {
+        const link = document.createElement("a");
+        link.download = `${recipientNameRef.current?.textContent}.png`;
+        link.href = dataUrl;
+        link.click();
       })
-        .then((dataUrl) => {
-          const link = document.createElement("a");
-          link.download = "certificate.png";
-          link.href = dataUrl;
-          link.click();
-        })
-        .catch((error) => {
-          console.error("Error generating image:", error);
-        });
-    },
-    [certificateRef],
-  );
+      .catch((error) => {
+        console.error("Error generating image:", error);
+      });
+  }
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    await downloadCertificate();
+  };
+
+  const onBulkSubmit = async () => {
+    if (!csvFile.data) return;
+    for (const record of csvFile.data) {
+      recipientNameRef.current!.textContent = record.name;
+      dateRef.current!.textContent = record.date;
+      descriptionRef.current!.textContent = record.description;
+      await downloadCertificate();
+    }
+  };
 
   return (
     <form onSubmit={onSubmit} className="flex w-full flex-col gap-y-4">
@@ -132,6 +193,22 @@ export function CertificateForm() {
           type="submit"
         >
           Download
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-x-2">
+        <div className="flex flex-col gap-y-1 text-white">
+          <input
+            id="csv-file"
+            className="hidden"
+            onChange={onCsvFileChange}
+            type="file"
+            accept=".csv"
+          />
+          <LabelButton htmlFor="csv-file">Upload CSV</LabelButton>
+          <p className="text-center">{csvFile.name || "No File Uploaded"}</p>
+        </div>
+        <Button type="button" onClick={onBulkSubmit}>
+          Generate Bulk Certificates
         </Button>
       </div>
     </form>
