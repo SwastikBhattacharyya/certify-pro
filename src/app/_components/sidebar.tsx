@@ -43,7 +43,7 @@ export function Sidebar() {
             {images.map((image, index) => (
               <div
                 key={index}
-                className="group relative aspect-[1.33] w-[80%] cursor-pointer transition-colors duration-300"
+                className="group relative aspect-[1.33] w-[80%] cursor-pointer border-2 border-black transition-colors duration-300"
                 onClick={() => onImageClick(image)}
               >
                 <div className="absolute top-0 left-0 z-10 flex h-full w-full items-center justify-center bg-black/40 text-xl font-bold text-white opacity-0 transition-opacity group-hover:opacity-100">
