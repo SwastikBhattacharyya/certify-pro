@@ -24,10 +24,10 @@ export function Sidebar() {
 
   return (
     <div className="pointer-events-none absolute top-0 left-0">
-      <div className="h-dvh w-screen overflow-hidden">
+      <div className="h-dvh w-dvw overflow-hidden">
         <div
           className={cn(
-            "relative z-50 flex h-full w-screen flex-col items-center gap-y-8 bg-white px-4 py-8 backdrop-blur-2xl transition-transform duration-300 ease-in-out sm:w-[25vw] sm:bg-white/30",
+            "relative z-50 flex h-full w-full flex-col items-center gap-y-8 bg-white px-4 py-8 backdrop-blur-2xl transition-transform duration-300 ease-in-out sm:w-[25vw] sm:bg-white/30",
             {
               "translate-x-0": isSidebarOpen,
               "-translate-x-full": !isSidebarOpen,
